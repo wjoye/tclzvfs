@@ -49,20 +49,24 @@
 #include <sys/stat.h>
 #include <time.h>
 #include <stdlib.h>
-#include <malloc.h>
+/*#include <malloc.h>*/
 #include "tcl.h"
 
 /* Some modifications to support encrypted files */
+/*
 #define update_keys    zp_update_keys
 #define init_keys      zp_init_keys
 #define decrypt_byte   zp_decrypt_byte
+*/
 
 /* some prototype definitions */
+/*
 extern void init_keys(char *pwd);
 extern int update_keys(int c);
 extern unsigned char decrypt_byte();
 extern char *getPwdKey(char *keybuf);
 extern const unsigned long *crc_32_tab;
+*/
 
 /* End of modifications to support encrypted files. */
 
@@ -803,6 +807,7 @@ static int vfsRead (
       /* Make preparations to decrypt the data. */
 
 	  /* Read and decrypt the encryption header. */
+    /*
       crc_32_tab = get_crc_table();
 	  init_keys(getPwdKey(pwdbuf));
       len = Tcl_Read(pInfo->chan, encryptHdr, sizeof(encryptHdr));
@@ -813,7 +818,8 @@ static int vfsRead (
 		  }
 
 	  }
-	}
+    */
+  }
 
   if( pInfo->isCompressed ){
     int err = Z_OK;
@@ -830,12 +836,14 @@ static int vfsRead (
 
 		if (pInfo->isEncrypted) {
 			/* Decrypt the bytes we have just read. */
+		  /*
 			for (i = 0; i < len; ++i) {
 				C = pInfo->zBuf[i];
 			    temp = C ^ decrypt_byte();
 				update_keys(temp);
 				pInfo->zBuf[i] = temp;
 			}
+		  */
 		}
 
         pInfo->nByteCompr -= len;
@@ -858,12 +866,14 @@ static int vfsRead (
     toRead = Tcl_Read(pInfo->chan, buf, toRead);
 	if (pInfo->isEncrypted) {
 		/* Decrypt the bytes we have just read. */
+	  /*
 		for (i = 0; i < toRead; ++i) {
 			C = buf[i];
 		    temp = C ^ decrypt_byte();
 			update_keys(temp);
 			buf[i] = temp;
 		}
+	  */
 	}
   }
   pInfo->nByte = toRead;
@@ -1018,8 +1028,10 @@ static Tcl_Channel ZvfsFileOpen(
 		 Someone must have tampered with the application.
 		 Let's exit the program.
 	    */
+	  /*
 		 printf("This application has an unauthorized modification. Exiting immediately\n");
 		 exit(-10);
+	  */
 	   }
      }
   pInfo->isCompressed = INT16(zBuf, 8);
