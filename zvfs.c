@@ -314,7 +314,7 @@ int Zvfs_Mount(
   if (!zArchive) {
     pEntry=Tcl_FirstHashEntry(&local.archiveHash,&zSearch);
     while (pEntry) {
-      if (pArchive = Tcl_GetHashValue(pEntry)) {
+      if ((pArchive = Tcl_GetHashValue(pEntry))) {
         Tcl_AppendResult(interp,pArchive->zMountPoint," ",pArchive->zName," ",0);
       }
       pEntry=Tcl_NextHashEntry(&zSearch);
@@ -324,7 +324,7 @@ int Zvfs_Mount(
   if (!zMountPoint) {
     pEntry = Tcl_FindHashEntry(&local.archiveHash,AbsolutePath(zArchive));
     if (pEntry) {
-      if (pArchive = Tcl_GetHashValue(pEntry)) {
+      if ((pArchive = Tcl_GetHashValue(pEntry))) {
         Tcl_AppendResult(interp, pArchive->zMountPoint, 0);
       }
     }
@@ -346,7 +346,7 @@ int Zvfs_Mount(
   ** ZIP archive.
   */
   iPos = Tcl_Seek(chan, -22, SEEK_END);
-  Tcl_Read(chan, zBuf, 22);
+  Tcl_Read(chan, (char*)zBuf, 22);
   if (memcmp(zBuf, "\120\113\05\06", 4)) {
     Tcl_AppendResult(interp, "not a ZIP archive", NULL);
     return TCL_ERROR;
@@ -392,7 +392,7 @@ int Zvfs_Mount(
     ** the size of the "extra" information, and the offset into the archive
     ** file of the file data.
     */
-    Tcl_Read(chan, zBuf, 46);
+    Tcl_Read(chan, (char*)zBuf, 46);
     if (memcmp(zBuf, "\120\113\01\02", 4)) {
       Tcl_AppendResult(interp, "ill-formed central directory entry", NULL);
       return TCL_ERROR;
@@ -480,7 +480,7 @@ static int ZvfsLookupMount(char *zFilename){
   zTrueName = AbsolutePath(zFilename);
   pEntry=Tcl_FirstHashEntry(&local.archiveHash,&zSearch);
   while (pEntry) {
-    if (pArchive = Tcl_GetHashValue(pEntry)) {
+    if ((pArchive = Tcl_GetHashValue(pEntry))) {
       if (!strcmp(pArchive->zMountPoint,zTrueName)) {
 	match=1;
 	break;
@@ -743,8 +743,8 @@ static int vfsClose(
   ZvfsChannelInfo* pInfo = (ZvfsChannelInfo*)instanceData;
 
   if( pInfo->zBuf ){
-    Tcl_Free(pInfo->zBuf);
-    Tcl_Free(pInfo->uBuf);
+    Tcl_Free((char*)pInfo->zBuf);
+    Tcl_Free((char*)pInfo->uBuf);
     inflateEnd(&pInfo->stream);
   }
   if( pInfo->chan ){
@@ -785,7 +785,7 @@ static int vfsInput (
 
 static int vfsRead (
   ClientData instanceData, /* The channel to read from */
-  char *buf,               /* Buffer to fill */
+  unsigned char *buf,               /* Buffer to fill */
   int toRead,              /* Requested number of bytes */
   int *pErrorCode          /* Location of error flag */
   ){ /* Read and decompress all data for the associated file into the specified buffer */
@@ -832,7 +832,7 @@ static int vfsRead (
         if (len > COMPR_BUF_SIZE) {
           len = COMPR_BUF_SIZE;
         }
-        len = Tcl_Read(pInfo->chan, pInfo->zBuf, len);
+        len = Tcl_Read(pInfo->chan, (char*)pInfo->zBuf, len);
 
 		if (pInfo->isEncrypted) {
 			/* Decrypt the bytes we have just read. */
@@ -863,7 +863,7 @@ static int vfsRead (
       return -1;
     }
   }else{
-    toRead = Tcl_Read(pInfo->chan, buf, toRead);
+    toRead = Tcl_Read(pInfo->chan, (char*)buf, toRead);
 	if (pInfo->isEncrypted) {
 		/* Decrypt the bytes we have just read. */
 	  /*
@@ -1006,7 +1006,7 @@ static Tcl_Channel ZvfsFileOpen(
     return 0;
   }
   Tcl_Seek(chan, pFile->iOffset, SEEK_SET);
-  Tcl_Read(chan, zBuf, 30);
+  Tcl_Read(chan, (char*)zBuf, 30);
   if( memcmp(zBuf, "\120\113\03\04", 4) ){
     if( interp ){
       Tcl_AppendResult(interp, "local header mismatch: ", NULL);
@@ -1037,7 +1037,7 @@ static Tcl_Channel ZvfsFileOpen(
   pInfo->isCompressed = INT16(zBuf, 8);
   if (pInfo->isCompressed ){
       z_stream *stream = &pInfo->stream;
-      pInfo->zBuf = Tcl_Alloc(COMPR_BUF_SIZE);
+      pInfo->zBuf = (unsigned char*)Tcl_Alloc(COMPR_BUF_SIZE);
       stream->zalloc = (alloc_func)0;
       stream->zfree = (free_func)0;
       stream->opaque = (voidpf)0;
@@ -1059,7 +1059,7 @@ static Tcl_Channel ZvfsFileOpen(
   chan = Tcl_CreateChannel(&vfsChannelType, zName, 
                            (ClientData)pInfo, TCL_READABLE);
 
-  pInfo->uBuf = Tcl_Alloc(pInfo->nByte);
+  pInfo->uBuf = (unsigned char*)Tcl_Alloc(pInfo->nByte);
   /* Read and decompress the file contents */
   if (pInfo->uBuf) {
       pInfo->uBuf[0] = 0;
@@ -1205,7 +1205,7 @@ Tcl_Obj *Tobe_FSListVolumesProc _ANSI_ARGS_((void)) {
   
   pEntry=Tcl_FirstHashEntry(&local.archiveHash,&zSearch);
   while (pEntry) {
-	if (pArchive = Tcl_GetHashValue(pEntry)) {
+    if ((pArchive = Tcl_GetHashValue(pEntry))) {
 		if (!pVols) {
 			pVols=Tcl_NewListObj(0,0);
 			Tcl_IncrRefCount(pVols);
@@ -1228,7 +1228,7 @@ int Tobe_FSChdirProc _ANSI_ARGS_((Tcl_Obj *pathPtr)) {
 
 static CONST char *TobeAttrs[] = { "uncompsize", "compsize", "offset", "mount", "archive", 0 };
 
-CONST char** Tobe_FSFileAttrStringsProc _ANSI_ARGS_((Tcl_Obj *pathPtr,
+CONST char* const *Tobe_FSFileAttrStringsProc _ANSI_ARGS_((Tcl_Obj *pathPtr,
                             Tcl_Obj** objPtrRef)) {
   return TobeAttrs;
 }
