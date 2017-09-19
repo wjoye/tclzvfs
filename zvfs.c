@@ -1121,7 +1121,7 @@ Tcl_Obj *Tobe_FSListVolumesProc _ANSI_ARGS_((void))
   Tcl_HashSearch zSearch;   /* Search all mount points */
   ZvfsArchive *pArchive;     /* The ZIP archive being mounted */
   Tcl_Obj *pVols=0, *pVol;
-  char mountpt[200];
+  char mountpt[2048];
   
   pEntry=Tcl_FirstHashEntry(&local.archiveHash,&zSearch);
   while (pEntry) {
