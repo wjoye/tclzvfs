@@ -187,7 +187,7 @@ VALGRINDARGS	= --tool=memcheck --num-callers=8 --leak-resolution=high \
 # for the BINARIES that you specified above have already been done.
 #========================================================================
 
-all: binaries libraries doc
+all: binaries libraries #doc
 
 #========================================================================
 # The binaries target builds executable programs, Windows .dll's, unix
@@ -212,7 +212,7 @@ doc:
 	@echo "        xml2nroff sample.xml > sample.n"
 	@echo "        xml2html sample.xml > sample.html"
 
-install: all install-binaries install-libraries install-doc
+install: all install-binaries install-libraries #install-doc
 
 install-binaries: binaries install-lib-binaries install-bin-binaries
 
@@ -415,6 +415,7 @@ install-lib-binaries: binaries
 	    echo " Install pkgIndex.tcl $(DESTDIR)$(pkglibdir)"; \
 	    $(INSTALL_DATA) pkgIndex.tcl $(DESTDIR)$(pkglibdir); \
 	fi
+	$(INSTALL_DATA) tclzvfsConfig.sh $(DESTDIR)$(libdir)
 
 #========================================================================
 # Install binary executables (e.g. .exe files and dependent .dll files)
